@@ -122,7 +122,7 @@ void OdomEstimationClass::addEdgeCostFactor(const pcl::PointCloud<pcl::PointXYZI
             Eigen::Matrix3d covMat = Eigen::Matrix3d::Zero();
             // 对点去中心化后， 将点构建成矩阵，用主成分分析的方法找出这五个点的主方向。找主方向为了计算目标点与这些点的距离误差。
             // 具体来说，如果这五个点大致处于一条直线上，则，所有点累加成的矩阵的特征值会从小到大排列，会有lamda1 < lambda2 << lambda3，
-            // 其中lambda3所对应的特征向量就是这些点的主方向。
+            // 其中lambda3所对应的特征向量就是这些点的主方向。 示例演示可以参考mat.py
             for (int j = 0; j < 5; j++){
                 Eigen::Matrix<double, 3, 1> tmpZeroMean = nearCorners[j] - center;
                 covMat = covMat + tmpZeroMean * tmpZeroMean.transpose();
@@ -173,7 +173,8 @@ void OdomEstimationClass::addSurfCostFactor(const pcl::PointCloud<pcl::PointXYZI
                 matA0(j, 2) = map_in->points[pointSearchInd[j]].z;
             }
             // find the norm of plane
-            Eigen::Vector3d norm = matA0.colPivHouseholderQr().solve(matB0);
+            // Ax+By+Cz+D=0, (A;B;C)是法向量   ===>  (x,y,z)*(A/D; B/D; C/D) = -1  ===>  Ax=b,
+            Eigen::Vector3d norm = matA0.colPivHouseholderQr().solve(matB0); //求解一个向量norm，s.t. matA0*norm = matB0
             double negative_OA_dot_norm = 1 / norm.norm();
             norm.normalize();
 
@@ -181,6 +182,7 @@ void OdomEstimationClass::addSurfCostFactor(const pcl::PointCloud<pcl::PointXYZI
             for (int j = 0; j < 5; j++)
             {
                 // if OX * n > 0.2, then plane is not fit well
+                // 当n=(A/D; B/D; C/D)时, X*n+1=0     ===>    X*n/norm(n) + 1/norm(n)=0 
                 if (fabs(norm(0) * map_in->points[pointSearchInd[j]].x +
                          norm(1) * map_in->points[pointSearchInd[j]].y +
                          norm(2) * map_in->points[pointSearchInd[j]].z + negative_OA_dot_norm) > 0.2)

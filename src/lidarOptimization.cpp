@@ -12,7 +12,7 @@ bool EdgeAnalyticCostFunction::Evaluate(double const *const *parameters, double 
     Eigen::Map<const Eigen::Quaterniond> q_last_curr(parameters[0]); //从数组中直接映射出四元数和平移向量
     Eigen::Map<const Eigen::Vector3d> t_last_curr(parameters[0] + 4);
     Eigen::Vector3d lp;
-    lp = q_last_curr * curr_point + t_last_curr; //将当前点的投影大地图坐标系下
+    lp = q_last_curr * curr_point + t_last_curr; //将当前点的投影到地图坐标系下
     // lp a b 三点构成一个三角形
     Eigen::Vector3d nu = (lp - last_point_a).cross(lp - last_point_b); //叉乘为面积
     Eigen::Vector3d de = last_point_a - last_point_b;   // 底边长
@@ -41,9 +41,9 @@ SurfNormAnalyticCostFunction::SurfNormAnalyticCostFunction(Eigen::Vector3d curr_
 bool SurfNormAnalyticCostFunction::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {
     Eigen::Map<const Eigen::Quaterniond> q_w_curr(parameters[0]);
     Eigen::Map<const Eigen::Vector3d> t_w_curr(parameters[0] + 4);
-    Eigen::Vector3d point_w = q_w_curr * curr_point + t_w_curr;
-    residuals[0] = plane_unit_norm.dot(point_w) + negative_OA_dot_norm;
-
+    Eigen::Vector3d point_w = q_w_curr * curr_point + t_w_curr; //将当前平面点投影到地图坐标系下
+    residuals[0] = plane_unit_norm.dot(point_w) + negative_OA_dot_norm; //残差形式
+ 
     if(jacobians != NULL) {
         if(jacobians[0] != NULL) {
             Eigen::Matrix3d skew_point_w = skew(point_w);
