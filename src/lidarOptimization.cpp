@@ -34,7 +34,6 @@ bool EdgeAnalyticCostFunction::Evaluate(double const *const *parameters, double 
     return true;
 }   
 
-
 SurfNormAnalyticCostFunction::SurfNormAnalyticCostFunction(Eigen::Vector3d curr_point_, Eigen::Vector3d plane_unit_norm_, double negative_OA_dot_norm_) 
         : curr_point(curr_point_), plane_unit_norm(plane_unit_norm_), negative_OA_dot_norm(negative_OA_dot_norm_){}
 
@@ -58,7 +57,9 @@ bool SurfNormAnalyticCostFunction::Evaluate(double const *const *parameters, dou
     return true;
 }   
 
-
+// 这里的x是待优化变量（parameters），对应于odomEstimationClass::parameters
+// 这里的delta是优化过程中的计算出的优化增量，是李代数形式
+// x_plus_delta形式同parameter相同
 bool PoseSE3Parameterization::Plus(const double *x, const double *delta, double *x_plus_delta) const
 {
     Eigen::Map<const Eigen::Vector3d> trans(x + 4);
@@ -85,6 +86,7 @@ bool PoseSE3Parameterization::ComputeJacobian(const double *x, double *jacobian)
     return true;
 }
 
+// 从李代数中获取四元数和平移向量
 void getTransformFromSe3(const Eigen::Matrix<double,6,1>& se3, Eigen::Quaterniond& q, Eigen::Vector3d& t){
     Eigen::Vector3d omega(se3.data());
     Eigen::Vector3d upsilon(se3.data()+3);

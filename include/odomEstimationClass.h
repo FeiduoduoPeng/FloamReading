@@ -49,7 +49,7 @@ class OdomEstimationClass
 		pcl::PointCloud<pcl::PointXYZI>::Ptr laserCloudSurfMap;
 	private:
 		//optimization variable
-		double parameters[7] = {0, 0, 0, 1, 0, 0, 0}; // ？待优化变量？ 四元数和平移向量
+		double parameters[7] = {0, 0, 0, 1, 0, 0, 0}; // 待优化变量 四元数和平移向量
 		Eigen::Map<Eigen::Quaterniond> q_w_curr = Eigen::Map<Eigen::Quaterniond>(parameters);
 		Eigen::Map<Eigen::Vector3d> t_w_curr = Eigen::Map<Eigen::Vector3d>(parameters + 4);
 

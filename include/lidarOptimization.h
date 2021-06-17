@@ -36,6 +36,7 @@ class SurfNormAnalyticCostFunction : public ceres::SizedCostFunction<1, 7> {
 		double negative_OA_dot_norm;
 };
 
+// 对LocalParameterization中的几个 常纯虚函数 进行实现。主要是定义右边变量的“加法”及其导数
 class PoseSE3Parameterization : public ceres::LocalParameterization {
 public:
 	
