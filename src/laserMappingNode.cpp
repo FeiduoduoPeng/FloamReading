@@ -82,7 +82,7 @@ void laser_mapping(){
             mutex_lock.unlock();
             
 
-            laserMapping.updateCurrentPointsToMap(pointcloud_in,current_pose);
+            laserMapping.updateCurrentPointsToMap(pointcloud_in,current_pose); // c参数： 激光雷达坐标系下的点云， 里程计位姿
 
             pcl::PointCloud<pcl::PointXYZI>::Ptr pc_map = laserMapping.getMap();
             sensor_msgs::PointCloud2 PointsMsg;

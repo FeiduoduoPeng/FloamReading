@@ -136,30 +136,26 @@ void LaserMappingClass::checkPoints(int& x, int& y, int& z){
 					pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud_temp(new pcl::PointCloud<pcl::PointXYZI>());
 					map[i][j][k] = point_cloud_temp;
 				}
-
 			}
-				
 		}
-
 	}
 }
 
 //update points to map 
 void LaserMappingClass::updateCurrentPointsToMap(const pcl::PointCloud<pcl::PointXYZI>::Ptr& pc_in, const Eigen::Isometry3d& pose_current){
-	
+	// 将里程计位置栅格化
 	int currentPosIdX = int(std::floor(pose_current.translation().x() / LASER_CELL_WIDTH + 0.5)) + origin_in_map_x;
 	int currentPosIdY = int(std::floor(pose_current.translation().y() / LASER_CELL_HEIGHT + 0.5)) + origin_in_map_y;
 	int currentPosIdZ = int(std::floor(pose_current.translation().z() / LASER_CELL_DEPTH + 0.5)) + origin_in_map_z;
 
-	//check is submap is null
+	//check is submap is null , 这里主要是依据当前里程计位置以及激光雷达的范围，判断是否超出地图范围，如果超过，则相应的拓宽地图
 	checkPoints(currentPosIdX,currentPosIdY,currentPosIdZ);
 
 	pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_pc(new pcl::PointCloud<pcl::PointXYZI>());
-	pcl::transformPointCloud(*pc_in, *transformed_pc, pose_current.cast<float>());
+	pcl::transformPointCloud(*pc_in, *transformed_pc, pose_current.cast<float>()); //将激光雷达下的点云变换到地图坐标系下
 	
 	//save points
-	for (int i = 0; i < (int)transformed_pc->points.size(); i++)
-	{
+	for (int i = 0; i < (int)transformed_pc->points.size(); i++){
 		pcl::PointXYZI point_temp = transformed_pc->points[i];
 		//for visualization only
 		point_temp.intensity = std::min(1.0 , std::max(pc_in->points[i].z+2.0, 0.0) / 5);
@@ -168,21 +164,17 @@ void LaserMappingClass::updateCurrentPointsToMap(const pcl::PointCloud<pcl::Poin
 		int currentPointIdZ = int(std::floor(point_temp.z / LASER_CELL_DEPTH + 0.5)) + origin_in_map_z;
 
 		map[currentPointIdX][currentPointIdY][currentPointIdZ]->push_back(point_temp);
-		
 	}
 	
-	//filtering points 
+	//filtering points , 跟前面的checkPoints函数类似，将当前位置的激光可达范围内的点进行降采样，降低点数目，减小后续ScanToMapMatch的搜索空间
 	for(int i=currentPosIdX-LASER_CELL_RANGE_HORIZONTAL;i<currentPosIdX+LASER_CELL_RANGE_HORIZONTAL+1;i++){
 		for(int j=currentPosIdY-LASER_CELL_RANGE_HORIZONTAL;j<currentPosIdY+LASER_CELL_RANGE_HORIZONTAL+1;j++){
 			for(int k=currentPosIdZ-LASER_CELL_RANGE_VERTICAL;k<currentPosIdZ+LASER_CELL_RANGE_VERTICAL+1;k++){
 				downSizeFilter.setInputCloud(map[i][j][k]);
 				downSizeFilter.filter(*(map[i][j][k]));
 			}
-				
 		}
-
 	}
-
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr LaserMappingClass::getMap(void){
